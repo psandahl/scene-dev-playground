@@ -12,7 +12,9 @@ runViewer :: Viewer -> IO ()
 runViewer viewer = do
     res <- loadShaderProgram viewer $
         ProgramRequest
-            { shaders = [(Vertex, "foo"), (Fragment, "bar")]
+            { shaders = [ (Vertex, "resources/vertex.glsl")
+                        , (Fragment, "resources/fragment.glsl")
+                        ]
             , uniforms = []
             }
     print res
