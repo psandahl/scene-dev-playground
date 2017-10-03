@@ -12,7 +12,7 @@ main =
         createViewer "Dev Playground"
                      defaultConfiguration
                      [ ClearColor 1 0 0 0 ]
-                     (Scene [Clear [ColorBufferBit]])
+                     (Scene [Clear [ColorBufferBit]] [])
 
 runViewer :: Viewer -> IO ()
 runViewer viewer = do
