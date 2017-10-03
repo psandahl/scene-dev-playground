@@ -9,7 +9,10 @@ import           Linear               (V3 (..))
 main :: IO ()
 main =
     either putStrLn runViewer =<<
-        createViewer "Dev Playground" defaultConfiguration [ ClearColor 1 0 0 0 ]
+        createViewer "Dev Playground"
+                     defaultConfiguration
+                     [ ClearColor 1 0 0 0 ]
+                     (Scene [Clear [ColorBufferBit]])
 
 runViewer :: Viewer -> IO ()
 runViewer viewer = do
