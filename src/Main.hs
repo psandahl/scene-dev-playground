@@ -1,8 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 --import           Control.Concurrent.Async
 import           Data.Vector.Storable (Vector, fromList)
-import           Graphics.GL          (GLuint)
+import           Graphics.GL          (GLfloat, GLuint)
 import           Graphics.Scene
 import           Linear               (V3 (..))
 
@@ -21,7 +22,7 @@ runViewer viewer = do
             { shaders = [ (Vertex, "resources/vertex.glsl")
                         , (Fragment, "resources/fragment.glsl")
                         ]
-            , uniforms = []
+            , uniformNames = ["col"]
             }
 
     meshRes <- loadMesh viewer $
@@ -36,7 +37,7 @@ runViewer viewer = do
 
             case meshRes of
                 Right mesh' -> do
-                    let entity = Entity [] shader mesh'
+                    let entity = Entity [] shader [UniformValue "col" triangleColor] mesh'
                     setScene viewer $ Scene [Clear [ColorBufferBit]] [entity]
 
                 Left err -> logStrLn viewer err
@@ -55,3 +56,6 @@ triangleVertices =
 
 triangleIndices :: Vector GLuint
 triangleIndices = fromList [0, 1, 2]
+
+triangleColor :: V3 GLfloat
+triangleColor = V3 1 1 0
