@@ -2,18 +2,17 @@
 module Main where
 
 --import           Control.Concurrent.Async
+import           Control.Monad        (void)
 import           Data.Vector.Storable (Vector, fromList)
 import           Graphics.GL          (GLfloat, GLuint)
 import           Graphics.Scene
 import           Linear               (V3 (..))
 
 main :: IO ()
-main =
-    either putStrLn runViewer =<<
-        createViewer defaultConfiguration
+main = void $ viewScenes defaultConfiguration viewApp
 
-runViewer :: Viewer -> IO ()
-runViewer viewer = do
+viewApp :: Viewer -> IO ()
+viewApp viewer = do
     shaderRes <- loadShaderProgram viewer $
         ProgramRequest
             { shaders = [ (Vertex, "resources/vertex.glsl")
@@ -40,8 +39,6 @@ runViewer viewer = do
                 Left err -> logStrLn viewer err
 
         Left err -> logStrLn viewer err
-
-    waitOnViewerClose viewer
 
 triangleVertices :: Vector VertexWithPos
 triangleVertices =
