@@ -35,7 +35,7 @@ runViewer viewer = do
             case meshRes of
                 Right mesh' -> do
                     let entity = Entity [] shader [UniformValue "col" triangleColor] mesh'
-                    setScene viewer $ Scene [Clear [ColorBufferBit]] [entity]
+                    setScene viewer $ Scene [Clear [ColorBufferBit, DepthBufferBit]] [entity]
 
                 Left err -> logStrLn viewer err
 
