@@ -11,7 +11,7 @@ main =
     either putStrLn runViewer =<<
         createViewer "Dev Playground"
                      defaultConfiguration
-                     [ ClearColor 1 0 0 0 ]
+                     [ ClearColor 0 0 1 0 ]
                      (Scene [Clear [ColorBufferBit]] [])
 
 runViewer :: Viewer -> IO ()
@@ -23,7 +23,6 @@ runViewer viewer = do
                         ]
             , uniforms = []
             }
-    print shaderRes
 
     meshRes <- loadMesh viewer $
         MeshRequest
@@ -31,16 +30,27 @@ runViewer viewer = do
             , primitive = Triangles
             , indices = triangleIndices
             }
-    print meshRes
+
+    case shaderRes of
+        Right shader ->
+
+            case meshRes of
+                Right mesh' -> do
+                    let entity = Entity [] shader mesh'
+                    setScene viewer $ Scene [Clear [ColorBufferBit]] [entity]
+
+                Left err -> logStrLn viewer err
+
+        Left err -> logStrLn viewer err
 
     waitOnViewerClose viewer
 
 triangleVertices :: Vector VertexWithPos
 triangleVertices =
     fromList
-        [ VertexWithPos { position = V3 0 1 0}
-        , VertexWithPos { position = V3 (-1) (-1) 0}
-        , VertexWithPos { position = V3 1 (-1) 0}
+        [ VertexWithPos { position = V3 0 0.5 0}
+        , VertexWithPos { position = V3 (-0.5) (-0.5) 0}
+        , VertexWithPos { position = V3 0.5 (-0.5) 0}
         ]
 
 triangleIndices :: Vector GLuint
