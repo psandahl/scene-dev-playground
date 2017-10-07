@@ -21,6 +21,6 @@ executable scene-dev-playground
                      , async
                      , gl
                      , linear
-                     , scene
+                     , gl-scene
                      , vector
   ghc-options:         -Wall -threaded
