@@ -1,6 +1,7 @@
 module Main where
 
 import           Scene
+import           Text.Printf (printf)
 
 main :: IO ()
 main = do
@@ -13,11 +14,11 @@ onInit _viewer = putStrLn "onInit"
 onEvent :: Viewer -> Event -> () -> IO ()
 
 onEvent viewer CloseRequest _ = do
-    putStrLn "Close now!"
+    putStrLn "onEvent: Close now!"
     close viewer
 
---onEvent _viewer event _ =
---    putStrLn $ "onEvent: " ++ show event
+onEvent _viewer (Frame duration viewport) _ =
+    printf "onEvent: Frame duration=%f, viewport=%s\n" duration (show viewport)
 
 onExit :: Viewer -> () -> IO ()
 onExit _viewer _ = putStrLn "onExit"
