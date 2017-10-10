@@ -6,7 +6,8 @@ import           Scene
 
 main :: IO ()
 main = do
-    res <- viewScenes defaultConfiguration onInit onEvent onExit
+    res <- viewScenes (defaultConfiguration { actions = [ClearColor 1 0 0 1]})
+                      onInit onEvent onExit
     print res
 
 onInit :: Viewer -> IO ()
