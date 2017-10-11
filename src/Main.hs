@@ -10,7 +10,9 @@ main = do
                                             [ClearColor 1 0 0 1]
                                       , initialScene =
                                           Scene { actions =
-                                                    [ Clear [ColorBufferBit]]
+                                                    [ Clear [ColorBufferBit]
+                                                    , Enable DepthTest
+                                                    ]
                                                 }
                                       }
     res <- viewScenes config onInit onEvent onExit
