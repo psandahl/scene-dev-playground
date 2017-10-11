@@ -6,8 +6,14 @@ import           Scene
 
 main :: IO ()
 main = do
-    res <- viewScenes (defaultConfiguration { globalActions = [ClearColor 1 0 0 1]})
-                      onInit onEvent onExit
+    let config = defaultConfiguration { globalActions =
+                                            [ClearColor 1 0 0 1]
+                                      , initialScene =
+                                          Scene { actions =
+                                                    [ Clear [ColorBufferBit]]
+                                                }
+                                      }
+    res <- viewScenes config onInit onEvent onExit
     print res
 
 onInit :: Viewer -> IO ()
