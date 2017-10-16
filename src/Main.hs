@@ -11,11 +11,11 @@ import           Scene.GL.Attribute.VertexWithPos (VertexWithPos (..))
 main :: IO ()
 main = do
     let config = defaultConfiguration
-            { globalActions =
+            { globalSettings =
                 [ClearColor 1 0 0 1]
             , initialScene =
                 Scene
-                    { sceneActions =
+                    { sceneSettings =
                         [ Clear [ColorBufferBit]
                         ]
                     , sceneEntities = []
@@ -45,13 +45,13 @@ onInit viewer = do
                     }
             case meshResult of
                 Right mesh -> do
-                    let entity = Screen { screenActions = []
+                    let entity = Screen { screenSettings = []
                                         , screenProgram = program
                                         , screenMesh = mesh
                                         , screenUniforms = [ UniformValue "col" triangleColor ]
                                         }
                     setCurrentScene viewer
-                        Scene { sceneActions = [Clear [ColorBufferBit]]
+                        Scene { sceneSettings = [Clear [ColorBufferBit]]
                               , sceneEntities = [entity]
                               }
                 Left err -> putStrLn err
