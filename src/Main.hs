@@ -45,10 +45,10 @@ onInit viewer = do
                     }
             case meshResult of
                 Right mesh -> do
-                    let entity = Screen { screenSettings = []
-                                        , screenProgram = program
-                                        , screenMesh = mesh
-                                        , screenUniforms = [ UniformValue "col" triangleColor ]
+                    let entity = Entity { entitySettings = []
+                                        , entityProgram = program
+                                        , entityMesh = mesh
+                                        , entityUniforms = [ UniformValue "col" triangleColor ]
                                         }
                     setCurrentScene viewer
                         Scene { sceneSettings = [Clear [ColorBufferBit]]
