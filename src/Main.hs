@@ -1,32 +1,36 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import           Control.Monad                    (void)
 import           Data.Vector.Storable             (Vector, fromList)
 import           Graphics.GL                      (GLfloat, GLuint)
 import           Linear                           (V3 (..))
 import           Scene
 import           Scene.GL.Attribute.VertexWithPos (VertexWithPos (..))
+import           Scene.Math
 --import           Text.Printf (printf)
+
+data App = App
+    { triangle :: !Entity
+    }
 
 main :: IO ()
 main = do
-    let config = defaultConfiguration
-            { globalSettings =
-                [ClearColor 1 0 0 1]
-            , initialScene =
-                Scene
-                    { sceneSettings =
-                        [ Clear [ColorBufferBit]
-                        ]
-                    , sceneEntities = []
-                    }
-            }
-    res <- viewScenes config onInit onEvent onExit
-    print res
+    let globalSettings' = [ ClearColor 1 0 0 1 ]
+        initialScene' =
+            Scene { sceneSettings = [ Clear [ColorBufferBit]]
+                  , sceneEntities = []
+                  }
+        config = defaultConfiguration { globalSettings = globalSettings'
+                                      , initialScene = initialScene'
+                                      }
+    void $ viewScenes config appInit appEvent appExit
 
-onInit :: Viewer -> IO ()
-onInit viewer = do
-    putStrLn "onInit - enter"
+appInit :: Viewer -> IO (Maybe App)
+appInit viewer = do
+    putStrLn "appInit"
+
+    -- Load program
     progResult <- programFromFiles viewer
         ProgramRequest
             { shaders = [ (Vertex, "resources/vertex.glsl")
@@ -35,41 +39,48 @@ onInit viewer = do
             , uniformNames = ["col"]
             }
 
-    case progResult of
-        Right program -> do
-            meshResult <- meshFromRequest viewer
-                MeshRequest
-                    { vertices = triangleVertices
-                    , indices = triangleIndices
-                    , primitive = Triangles
-                    }
-            case meshResult of
-                Right mesh -> do
-                    let entity = Entity { entitySettings = []
-                                        , entityProgram = program
-                                        , entityMesh = mesh
-                                        , entityUniforms = [ UniformValue "col" triangleColor ]
-                                        }
-                    setCurrentScene viewer
-                        Scene { sceneSettings = [Clear [ColorBufferBit]]
-                              , sceneEntities = [entity]
-                              }
-                Left err -> putStrLn err
-        Left err      -> putStrLn err
+    meshResult <- meshFromRequest viewer
+        MeshRequest
+            { vertices = triangleVertices
+            , indices = triangleIndices
+            , primitive = Triangles
+            }
 
-    putStrLn "onInit - done"
+    case (progResult, meshResult) of
+        (Right program, Right mesh) -> do
+            let triangle' = Entity { entitySettings = []
+                                   , entityProgram = program
+                                   , entityMesh = mesh
+                                   , entityUniforms = []
+                                   }
+            return $ Just App { triangle = triangle' }
 
-onEvent :: Viewer -> Event -> () -> IO ()
+        _ -> return Nothing
 
-onEvent viewer CloseRequest _ = do
-    putStrLn "onEvent: Close now!"
+appEvent :: Viewer -> Event -> Maybe App -> IO (Maybe App)
+
+-- | Catch the frame event and render stuff.
+appEvent viewer (Frame _ _) (Just app) = do
+    setCurrentScene viewer
+        Scene { sceneSettings = [ Clear [ColorBufferBit] ]
+              , sceneEntities = [(triangle app) { entityUniforms = [ UniformValue "col" triangleColor ]}]
+              }
+    return (Just app)
+
+-- Catch the case where we have no app ...
+appEvent viewer _ Nothing = do
+    putStrLn "appInit reported Nothing. Bye!"
     close viewer
+    return Nothing
 
-onEvent _viewer _ _ = return ()
-    -- printf "onEvent: Frame duration=%f, viewport=%s\n" duration (show viewport)
+-- Catch the case where close is requested from the window.
+appEvent viewer CloseRequest app = do
+    putStrLn "Close requested. Bye!"
+    close viewer
+    return app
 
-onExit :: Viewer -> () -> IO ()
-onExit _viewer _ = putStrLn "onExit"
+appExit :: Viewer -> Maybe App -> IO ()
+appExit _ _ = putStrLn "appExit"
 
 triangleVertices :: Vector VertexWithPos
 triangleVertices = fromList

@@ -38,6 +38,7 @@ resolver: lts-9.9
 packages:
 - .
 - ../gl-scene
+- ../gl-scene-math
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
