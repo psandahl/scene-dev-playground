@@ -4,10 +4,12 @@ module Main where
 import           Control.Monad                    (void)
 import           Data.Vector.Storable             (Vector, fromList)
 import           Graphics.GL                      (GLfloat, GLuint)
-import           Linear                           (V3 (..))
+import           Linear                           (M44, V3 (..))
 import           Scene
+import qualified Scene
 import           Scene.GL.Attribute.VertexWithPos (VertexWithPos (..))
 import           Scene.Math
+import qualified Scene.Math                       as Math
 --import           Text.Printf (printf)
 
 data App = App
@@ -36,7 +38,7 @@ appInit viewer = do
             { shaders = [ (Vertex, "resources/vertex.glsl")
                         , (Fragment, "resources/fragment.glsl")
                         ]
-            , uniformNames = ["col"]
+            , uniformNames = ["col", "mvp"]
             }
 
     meshResult <- meshFromRequest viewer
@@ -60,10 +62,20 @@ appInit viewer = do
 appEvent :: Viewer -> Event -> Maybe App -> IO (Maybe App)
 
 -- | Catch the frame event and render stuff.
-appEvent viewer (Frame _ _) (Just app) = do
+appEvent viewer (Frame _ viewport) (Just app) = do
+    let perspectiveMatrix =
+            mkPerspectiveMatrix (Degrees 45) (toAspectRatio viewport) 0.1 1000 :: M44 GLfloat
+        viewMatrix = mkViewMatrix (V3 0 0 10) origo3d up3d
+        modelMatrix = mkIdentityMatrix
+        mvp = mvpMatrix modelMatrix viewMatrix perspectiveMatrix
+
     setCurrentScene viewer
         Scene { sceneSettings = [ Clear [ColorBufferBit] ]
-              , sceneEntities = [(triangle app) { entityUniforms = [ UniformValue "col" triangleColor ]}]
+              , sceneEntities =
+                  [(triangle app)
+                    { entityUniforms = [ UniformValue "col" triangleColor
+                                       , UniformValue "mvp" mvp
+                                       ]}]
               }
     return (Just app)
 
@@ -94,3 +106,9 @@ triangleIndices = fromList [0, 1, 2]
 
 triangleColor :: V3 GLfloat
 triangleColor = V3 0 0 1
+
+toAspectRatio :: Viewport -> AspectRatio
+toAspectRatio viewport =
+    AspectRatio { Math.width = Scene.width viewport
+                , Math.height = Scene.height viewport
+                }
