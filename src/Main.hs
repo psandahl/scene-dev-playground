@@ -70,7 +70,10 @@ appEvent viewer (Frame _ viewport) (Just app) = do
     let perspectiveMatrix =
             mkPerspectiveMatrix (Degrees 45) (toAspectRatio viewport) 0.1 1000 :: M44 GLfloat
         viewMatrix = mkViewMatrix (V3 0 0 10) origo3d up3d
-        modelMatrix = mkRotationMatrix y3d <| angle app
+        scaleMatrix = mkScalingMatrix (V3 2 2 2)
+        rotationMatrix = mkRotationMatrix y3d <| angle app
+        translationMatrix = mkTranslationMatrix (V3 2 0 0)
+        modelMatrix = srtMatrix scaleMatrix rotationMatrix translationMatrix
         mvp = mvpMatrix modelMatrix viewMatrix perspectiveMatrix
 
     setScene viewer
