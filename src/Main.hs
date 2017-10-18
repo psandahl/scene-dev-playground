@@ -3,10 +3,10 @@ module Main where
 
 import           Control.Monad                    (void)
 import           Data.Vector.Storable             (Vector, fromList)
+import           Flow                             ((<|))
 import           Graphics.GL                      (GLfloat, GLuint)
 import           Linear                           (M44, V3 (..))
 import           Scene
-import qualified Scene
 import           Scene.GL.Attribute.VertexWithPos (VertexWithPos (..))
 import           Scene.Math
 import qualified Scene.Math                       as Math
@@ -14,6 +14,7 @@ import qualified Scene.Math                       as Math
 
 data App = App
     { triangle :: !Entity
+    , angle    :: !(Angle GLfloat)
     }
 
 main :: IO ()
@@ -55,7 +56,10 @@ appInit viewer = do
                                    , entityMesh = mesh
                                    , entityUniforms = []
                                    }
-            return $ Just App { triangle = triangle' }
+            return $
+                Just App { triangle = triangle'
+                         , angle = Degrees 45
+                         }
 
         _ -> return Nothing
 
@@ -66,7 +70,7 @@ appEvent viewer (Frame _ viewport) (Just app) = do
     let perspectiveMatrix =
             mkPerspectiveMatrix (Degrees 45) (toAspectRatio viewport) 0.1 1000 :: M44 GLfloat
         viewMatrix = mkViewMatrix (V3 0 0 10) origo3d up3d
-        modelMatrix = mkIdentityMatrix
+        modelMatrix = mkRotationMatrix y3d <| angle app
         mvp = mvpMatrix modelMatrix viewMatrix perspectiveMatrix
 
     setCurrentScene viewer
