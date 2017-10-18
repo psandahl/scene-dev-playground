@@ -73,7 +73,7 @@ appEvent viewer (Frame _ viewport) (Just app) = do
         modelMatrix = mkRotationMatrix y3d <| angle app
         mvp = mvpMatrix modelMatrix viewMatrix perspectiveMatrix
 
-    setCurrentScene viewer
+    setScene viewer
         Scene { sceneSettings = [ Clear [ColorBufferBit] ]
               , sceneEntities =
                   [(triangle app)
