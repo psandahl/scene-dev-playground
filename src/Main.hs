@@ -51,7 +51,9 @@ appInit viewer = do
 
     case (progResult, meshResult) of
         (Right program, Right mesh) -> do
-            let triangle' = Entity { entitySettings = []
+            let triangle' = Entity { entitySettings =
+                                        [ SetPolygonMode FrontAndBack Line
+                                        ]
                                    , entityProgram = program
                                    , entityMesh = mesh
                                    , entityUniforms = []
