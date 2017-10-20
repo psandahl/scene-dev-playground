@@ -19,7 +19,7 @@ data App = App
 
 main :: IO ()
 main = do
-    let globalSettings' = [ ClearColor 1 0 0 1 ]
+    let globalSettings' = [ SetClearColor 1 0 0 1 ]
         initialScene' =
             Scene { sceneSettings = [ Clear [ColorBufferBit]]
                   , sceneEntities = []
