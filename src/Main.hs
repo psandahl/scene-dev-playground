@@ -127,9 +127,9 @@ triangleRotationRadius = 10
 
 triangleVertices :: Vector VertexWithPos
 triangleVertices = fromList
-    [ VertexWithPos { position = V3 0 1 0 }
-    , VertexWithPos { position = V3 (-1) (-1) 0 }
-    , VertexWithPos { position = V3 1 (-1) 0 }
+    [ VertexWithPos { position = V3 0 0.5 0 }
+    , VertexWithPos { position = V3 (-0.5) (-0.5) 0 }
+    , VertexWithPos { position = V3 0.5 (-0.5) 0 }
     ]
 
 triangleIndices :: Vector GLuint
