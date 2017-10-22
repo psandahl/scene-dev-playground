@@ -5,7 +5,7 @@ import           Control.Monad                    (void)
 import           Data.Vector.Storable             (Vector, fromList)
 import           Flow                             ((<|))
 import           Graphics.GL                      (GLfloat, GLuint)
-import           Linear                           (M44, V3 (..))
+import           Linear                           (M44, V3 (..), (!*!))
 import           Scene
 import           Scene.GL.Attribute.VertexWithPos (VertexWithPos (..))
 import           Scene.Math
@@ -13,8 +13,9 @@ import qualified Scene.Math                       as Math
 --import           Text.Printf (printf)
 
 data App = App
-    { triangle :: !Entity
-    , angle    :: !(Angle GLfloat)
+    { triangleProgram :: !Program
+    , triangleMesh    :: !Mesh
+    , trianglesAt     :: ![Angle GLfloat]
     }
 
 main :: IO ()
@@ -50,15 +51,11 @@ appInit viewer = do
             }
 
     case (progResult, meshResult) of
-        (Right program, Right mesh) -> do
-            let triangle' = Entity { entitySettings = []
-                                   , entityProgram = program
-                                   , entityMesh = mesh
-                                   , entityUniforms = []
-                                   }
+        (Right program, Right mesh) ->
             return $
-                Just App { triangle = triangle'
-                         , angle = Degrees 45
+                Just App { triangleProgram = program
+                         , triangleMesh = mesh
+                         , trianglesAt = [ Degrees 0, Degrees 90, Degrees 180, Degrees 270 ]
                          }
 
         _ -> return Nothing
@@ -66,32 +63,24 @@ appInit viewer = do
 appEvent :: Viewer -> Event -> Maybe App -> IO (Maybe App)
 
 -- | Catch the frame event and render stuff.
-appEvent viewer (Frame _ viewport) (Just app) = do
+appEvent viewer (Frame duration viewport) (Just app) = do
     let perspectiveMatrix =
             mkPerspectiveMatrix (Degrees 45) (toAspectRatio viewport) 0.1 1000 :: M44 GLfloat
-        viewMatrix = mkViewMatrix (V3 0 0 10) origo3d up3d
-        scaleMatrix = mkScalingMatrix (V3 2 2 2)
-        rotationMatrix = mkRotationMatrix y3d <| angle app
-        translationMatrix = mkTranslationMatrix (V3 2 0 0)
-        modelMatrix = srtMatrix scaleMatrix rotationMatrix translationMatrix
-        mvp1 = mvpMatrix modelMatrix viewMatrix perspectiveMatrix
-        mvp2 = mvpMatrix mkIdentityMatrix viewMatrix perspectiveMatrix
+
+        viewMatrix = mkViewMatrix (V3 0 0 50) origo3d up3d
+
+        trianglesAt' = map (rotateTriangle duration) <| trianglesAt app
+
+        entities = map (renderTriangle (triangleProgram app) (triangleMesh app)
+                        perspectiveMatrix viewMatrix) trianglesAt'
 
     setScene viewer
-        Scene { sceneSettings = [ Clear [ColorBufferBit] ]
-              , sceneEntities =
-                  [(triangle app)
-                    { entitySettings = [ SetPolygonMode FrontAndBack Line ]
-                    , entityUniforms = [ UniformValue "col" triangleColor
-                                       , UniformValue "mvp" mvp1
-                                       ]}
-                  , (triangle app)
-                    { entityUniforms = [ UniformValue "col" triangleColor
-                                       , UniformValue "mvp" mvp2
-                                       ]}
-                  ]
-              }
-    return (Just app)
+        Scene
+            { sceneSettings = [Clear [ColorBufferBit]]
+            , sceneEntities = entities
+            }
+
+    return $ Just <| app { trianglesAt = trianglesAt' }
 
 -- Catch the case where we have no app ...
 appEvent viewer _ Nothing = do
@@ -107,6 +96,34 @@ appEvent viewer CloseRequest app = do
 
 appExit :: Viewer -> Maybe App -> IO ()
 appExit _ _ = putStrLn "appExit"
+
+renderTriangle :: Program -> Mesh -> M44 GLfloat
+               -> M44 GLfloat -> Angle GLfloat -> Entity
+renderTriangle program mesh perspective view angle =
+    -- Rotate around the y axis when transformed.
+    let modelMatrix =
+            mkRotationMatrix y3d angle !*!
+                mkTranslationMatrix (V3 0 0 triangleRotationRadius)
+    in Entity
+        { entitySettings = []
+        , entityProgram = program
+        , entityMesh = mesh
+        , entityUniforms =
+            [ UniformValue "col" triangleColor
+            , UniformValue "mvp" <| mvpMatrix modelMatrix view perspective
+            ]
+        }
+
+rotateTriangle :: Double -> Angle GLfloat -> Angle GLfloat
+rotateTriangle duration angle =
+    maybe angle id <| angle `angleAdd` frameRotation duration
+
+frameRotation :: Double -> Angle GLfloat
+frameRotation duration =
+    Degrees <| realToFrac duration * 90
+
+triangleRotationRadius :: GLfloat
+triangleRotationRadius = 10
 
 triangleVertices :: Vector VertexWithPos
 triangleVertices = fromList
