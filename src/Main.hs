@@ -51,9 +51,7 @@ appInit viewer = do
 
     case (progResult, meshResult) of
         (Right program, Right mesh) -> do
-            let triangle' = Entity { entitySettings =
-                                        [ SetPolygonMode FrontAndBack Line
-                                        ]
+            let triangle' = Entity { entitySettings = []
                                    , entityProgram = program
                                    , entityMesh = mesh
                                    , entityUniforms = []
@@ -76,15 +74,22 @@ appEvent viewer (Frame _ viewport) (Just app) = do
         rotationMatrix = mkRotationMatrix y3d <| angle app
         translationMatrix = mkTranslationMatrix (V3 2 0 0)
         modelMatrix = srtMatrix scaleMatrix rotationMatrix translationMatrix
-        mvp = mvpMatrix modelMatrix viewMatrix perspectiveMatrix
+        mvp1 = mvpMatrix modelMatrix viewMatrix perspectiveMatrix
+        mvp2 = mvpMatrix mkIdentityMatrix viewMatrix perspectiveMatrix
 
     setScene viewer
         Scene { sceneSettings = [ Clear [ColorBufferBit] ]
               , sceneEntities =
                   [(triangle app)
+                    { entitySettings = [ SetPolygonMode FrontAndBack Line ]
+                    , entityUniforms = [ UniformValue "col" triangleColor
+                                       , UniformValue "mvp" mvp1
+                                       ]}
+                  , (triangle app)
                     { entityUniforms = [ UniformValue "col" triangleColor
-                                       , UniformValue "mvp" mvp
-                                       ]}]
+                                       , UniformValue "mvp" mvp2
+                                       ]}
+                  ]
               }
     return (Just app)
 
