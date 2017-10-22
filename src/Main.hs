@@ -20,9 +20,12 @@ data App = App
 
 main :: IO ()
 main = do
-    let globalSettings' = [ SetClearColor 1 0 0 1 ]
+    let globalSettings' = [ SetClearColor 1 0 0 1
+                          , Enable DepthTest
+                          , SetDepthFunc Less
+                          ]
         initialScene' =
-            Scene { sceneSettings = [ Clear [ColorBufferBit]]
+            Scene { sceneSettings = [ Clear [ColorBufferBit, DepthBufferBit] ]
                   , sceneEntities = []
                   }
         config = defaultConfiguration { globalSettings = globalSettings'
@@ -76,7 +79,7 @@ appEvent viewer (Frame duration viewport) (Just app) = do
 
     setScene viewer
         Scene
-            { sceneSettings = [Clear [ColorBufferBit]]
+            { sceneSettings = [Clear [ColorBufferBit, DepthBufferBit]]
             , sceneEntities = entities
             }
 
