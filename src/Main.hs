@@ -120,7 +120,7 @@ rotateTriangle duration angle =
 
 frameRotation :: Double -> Angle GLfloat
 frameRotation duration =
-    Degrees <| realToFrac duration * 90
+    Degrees <| realToFrac duration * 45
 
 triangleRotationRadius :: GLfloat
 triangleRotationRadius = 10
