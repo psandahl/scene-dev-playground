@@ -13,14 +13,14 @@ import qualified Scene.Math                       as Math
 --import           Text.Printf (printf)
 
 data App = App
-    { triangleProgram :: !Program
-    , triangleMesh    :: !Mesh
-    , trianglesAt     :: ![Angle GLfloat]
+    { program      :: !Program
+    , triangleMesh :: !Mesh
+    , trianglesAt  :: ![Angle GLfloat]
     }
 
 main :: IO ()
 main = do
-    let globalSettings' = [ SetClearColor 1 0 0 1
+    let globalSettings' = [ SetClearColor 0 0 0 1
                           , Enable DepthTest
                           , SetDepthFunc Less
                           ]
@@ -54,10 +54,10 @@ appInit viewer = do
             }
 
     case (progResult, meshResult) of
-        (Right program, Right mesh) ->
+        (Right program', Right triangleMesh') ->
             return $
-                Just App { triangleProgram = program
-                         , triangleMesh = mesh
+                Just App { program = program'
+                         , triangleMesh = triangleMesh'
                          , trianglesAt = [ Degrees 0, Degrees 90, Degrees 180, Degrees 270 ]
                          }
 
@@ -74,7 +74,7 @@ appEvent viewer (Frame duration viewport) (Just app) = do
 
         trianglesAt' = map (rotateTriangle duration) <| trianglesAt app
 
-        entities = map (renderTriangle (triangleProgram app) (triangleMesh app)
+        entities = map (renderTriangle (program app) (triangleMesh app)
                         perspectiveMatrix viewMatrix) trianglesAt'
 
     setScene viewer
@@ -102,15 +102,15 @@ appExit _ _ = putStrLn "appExit"
 
 renderTriangle :: Program -> Mesh -> M44 GLfloat
                -> M44 GLfloat -> Angle GLfloat -> Entity
-renderTriangle program mesh perspective view angle =
+renderTriangle triProgram triMesh perspective view angle =
     -- Rotate around the y axis when transformed.
     let modelMatrix =
             mkRotationMatrix y3d angle !*!
                 mkTranslationMatrix (V3 0 0 triangleRotationRadius)
     in Entity
         { entitySettings = []
-        , entityProgram = program
-        , entityMesh = mesh
+        , entityProgram = triProgram
+        , entityMesh = triMesh
         , entityUniforms =
             [ UniformValue "col" triangleColor
             , UniformValue "mvp" <| mvpMatrix modelMatrix view perspective
@@ -139,7 +139,21 @@ triangleIndices :: Vector GLuint
 triangleIndices = fromList [0, 1, 2]
 
 triangleColor :: V3 GLfloat
-triangleColor = V3 0 0 1
+triangleColor = V3 0 1 0
+
+squareVertices :: Vector VertexWithPos
+squareVertices = fromList
+    [ VertexWithPos { position = V3 (-0.5) 0.5 0 }
+    , VertexWithPos { position = V3 0.5 0.5 0 }
+    , VertexWithPos { position = V3 (-0.5) (-0.5) 0 }
+    , VertexWithPos { position = V3 0.5 (-0.5) 0 }
+    ]
+
+squareIndices :: Vector GLuint
+squareIndices = fromList [1, 0, 2, 1, 2, 3]
+
+squareColor :: V3 GLfloat
+squareColor = V3 0 0 1
 
 toAspectRatio :: Viewport -> AspectRatio
 toAspectRatio viewport =
