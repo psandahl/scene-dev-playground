@@ -15,6 +15,7 @@ import qualified Scene.Math                       as Math
 data App = App
     { program      :: !Program
     , triangleMesh :: !Mesh
+    , squareMesh   :: !Mesh
     , trianglesAt  :: ![Angle GLfloat]
     }
 
@@ -46,18 +47,26 @@ appInit viewer = do
             , uniformNames = ["col", "mvp"]
             }
 
-    meshResult <- meshFromRequest viewer
+    triMeshResult <- meshFromRequest viewer
         MeshRequest
             { vertices = triangleVertices
             , indices = triangleIndices
             , primitive = Triangles
             }
 
-    case (progResult, meshResult) of
-        (Right program', Right triangleMesh') ->
+    squareMeshResult <- meshFromRequest viewer
+        MeshRequest
+            { vertices = squareVertices
+            , indices = squareIndices
+            , primitive = Triangles
+            }
+
+    case (progResult, triMeshResult, squareMeshResult) of
+        (Right program', Right triangleMesh', Right squareMesh') ->
             return $
                 Just App { program = program'
                          , triangleMesh = triangleMesh'
+                         , squareMesh = squareMesh'
                          , trianglesAt = [ Degrees 0, Degrees 90, Degrees 180, Degrees 270 ]
                          }
 
@@ -74,13 +83,16 @@ appEvent viewer (Frame duration viewport) (Just app) = do
 
         trianglesAt' = map (rotateTriangle duration) <| trianglesAt app
 
-        entities = map (renderTriangle (program app) (triangleMesh app)
-                        perspectiveMatrix viewMatrix) trianglesAt'
+        triangles = map (renderTriangle (program app) (triangleMesh app)
+                         perspectiveMatrix viewMatrix) trianglesAt'
+
+        square = renderSquare (program app) (squareMesh app)
+                               perspectiveMatrix viewMatrix
 
     setScene viewer
         Scene
             { sceneSettings = [Clear [ColorBufferBit, DepthBufferBit]]
-            , sceneEntities = entities
+            , sceneEntities = triangles ++ [square]
             }
 
     return $ Just <| app { trianglesAt = trianglesAt' }
@@ -99,6 +111,19 @@ appEvent viewer CloseRequest app = do
 
 appExit :: Viewer -> Maybe App -> IO ()
 appExit _ _ = putStrLn "appExit"
+
+renderSquare :: Program -> Mesh -> M44 GLfloat -> M44 GLfloat -> Entity
+renderSquare sqProgram sqMesh perspective view =
+    let modelMatrix = mkScalingMatrix (V3 8 8 8)
+    in Entity
+         { entitySettings = []
+         , entityProgram = sqProgram
+         , entityMesh = sqMesh
+         , entityUniforms =
+             [ UniformValue "col" squareColor
+             , UniformValue "mvp" <| mvpMatrix modelMatrix view perspective
+             ]
+         }
 
 renderTriangle :: Program -> Mesh -> M44 GLfloat
                -> M44 GLfloat -> Angle GLfloat -> Entity
