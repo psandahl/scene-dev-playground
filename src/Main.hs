@@ -5,7 +5,7 @@ import           Control.Monad                    (void)
 import           Data.Vector.Storable             (Vector, fromList)
 import           Flow                             ((<|))
 import           Graphics.GL                      (GLfloat, GLuint)
-import           Linear                           (M44, V3 (..), (!*!))
+import           Linear                           (M44, V3 (..), V4 (..), (!*!))
 import           Scene
 import           Scene.GL.Attribute.VertexWithPos (VertexWithPos (..))
 import           Scene.Math
@@ -21,7 +21,7 @@ data App = App
 
 main :: IO ()
 main = do
-    let globalSettings' = [ SetClearColor 0 0 0 1
+    let globalSettings' = [ SetClearColor 0 0 0 0
                           , Enable DepthTest
                           , SetDepthFunc Less
                           ]
@@ -116,7 +116,10 @@ renderSquare :: Program -> Mesh -> M44 GLfloat -> M44 GLfloat -> Entity
 renderSquare sqProgram sqMesh perspective view =
     let modelMatrix = mkScalingMatrix (V3 8 8 8)
     in Entity
-         { entitySettings = []
+         { entitySettings = [ Enable Blend
+                            , SetBlendEquationSeparate FuncAdd FuncAdd
+                            , SetBlendFuncSeparate SrcAlpha OneMinusSrcAlpha One Zero
+                            ]
          , entityProgram = sqProgram
          , entityMesh = sqMesh
          , entityUniforms =
@@ -163,8 +166,8 @@ triangleVertices = fromList
 triangleIndices :: Vector GLuint
 triangleIndices = fromList [0, 1, 2]
 
-triangleColor :: V3 GLfloat
-triangleColor = V3 0 1 0
+triangleColor :: V4 GLfloat
+triangleColor = V4 1 (69 / 255) 0 1
 
 squareVertices :: Vector VertexWithPos
 squareVertices = fromList
@@ -177,8 +180,8 @@ squareVertices = fromList
 squareIndices :: Vector GLuint
 squareIndices = fromList [1, 0, 2, 1, 2, 3]
 
-squareColor :: V3 GLfloat
-squareColor = V3 0 0 1
+squareColor :: V4 GLfloat
+squareColor = V4 0 0 (139 / 255) 0.5
 
 toAspectRatio :: Viewport -> AspectRatio
 toAspectRatio viewport =

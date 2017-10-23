@@ -1,10 +1,10 @@
 #version 330 core
 
-uniform vec3 col;
+uniform vec4 col;
 
 out vec4 color;
 
 void main()
 {
-  color = vec4(col, 1);
+  color = col;
 }
