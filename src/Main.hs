@@ -126,6 +126,7 @@ renderSquare sqProgram sqMesh perspective view =
              [ UniformValue "col" squareColor
              , UniformValue "mvp" <| mvpMatrix modelMatrix view perspective
              ]
+         , entityTextures = []
          }
 
 renderTriangle :: Program -> Mesh -> M44 GLfloat
@@ -143,6 +144,7 @@ renderTriangle triProgram triMesh perspective view angle =
             [ UniformValue "col" triangleColor
             , UniformValue "mvp" <| mvpMatrix modelMatrix view perspective
             ]
+        , entityTextures = []
         }
 
 rotateTriangle :: Double -> Angle GLfloat -> Angle GLfloat
