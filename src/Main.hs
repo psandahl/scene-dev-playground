@@ -7,7 +7,7 @@ import           Flow                             ((<|))
 import           Graphics.GL                      (GLfloat, GLuint)
 import           Linear                           (M44, V3 (..), V4 (..), (!*!))
 import           Scene
-import           Scene.GL.Attribute.VertexWithPos (VertexWithPos (..))
+import qualified Scene.GL.Attribute.VertexWithPos as WithPos
 import           Scene.Math
 import qualified Scene.Math                       as Math
 --import           Text.Printf (printf)
@@ -158,11 +158,11 @@ frameRotation duration =
 triangleRotationRadius :: GLfloat
 triangleRotationRadius = 10
 
-triangleVertices :: Vector VertexWithPos
+triangleVertices :: Vector WithPos.Vertex
 triangleVertices = fromList
-    [ VertexWithPos { position = V3 0 0.5 0 }
-    , VertexWithPos { position = V3 (-0.5) (-0.5) 0 }
-    , VertexWithPos { position = V3 0.5 (-0.5) 0 }
+    [ WithPos.Vertex { WithPos.position = V3 0 0.5 0 }
+    , WithPos.Vertex { WithPos.position = V3 (-0.5) (-0.5) 0 }
+    , WithPos.Vertex { WithPos.position = V3 0.5 (-0.5) 0 }
     ]
 
 triangleIndices :: Vector GLuint
@@ -171,12 +171,12 @@ triangleIndices = fromList [0, 1, 2]
 triangleColor :: V4 GLfloat
 triangleColor = V4 1 (69 / 255) 0 1
 
-squareVertices :: Vector VertexWithPos
+squareVertices :: Vector WithPos.Vertex
 squareVertices = fromList
-    [ VertexWithPos { position = V3 (-0.5) 0.5 0 }
-    , VertexWithPos { position = V3 0.5 0.5 0 }
-    , VertexWithPos { position = V3 (-0.5) (-0.5) 0 }
-    , VertexWithPos { position = V3 0.5 (-0.5) 0 }
+    [ WithPos.Vertex { WithPos.position = V3 (-0.5) 0.5 0 }
+    , WithPos.Vertex { WithPos.position = V3 0.5 0.5 0 }
+    , WithPos.Vertex { WithPos.position = V3 (-0.5) (-0.5) 0 }
+    , WithPos.Vertex { WithPos.position = V3 0.5 (-0.5) 0 }
     ]
 
 squareIndices :: Vector GLuint
