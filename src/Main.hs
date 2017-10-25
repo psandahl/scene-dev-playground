@@ -1,22 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import           Control.Monad                    (void)
-import           Data.Vector.Storable             (Vector, fromList)
-import           Flow                             ((<|))
-import           Graphics.GL                      (GLfloat, GLuint)
-import           Linear                           (M44, V3 (..), V4 (..), (!*!))
+import           Control.Monad                       (void)
+import           Data.Vector.Storable                (Vector, fromList)
+import           Flow                                ((<|))
+import           Graphics.GL                         (GLfloat, GLint, GLuint)
+import           Linear                              (M44, V2 (..), V3 (..),
+                                                      V4 (..), (!*!))
 import           Scene
-import qualified Scene.GL.Attribute.VertexWithPos as WithPos
+import qualified Scene.GL.Attribute.VertexWithPos    as WithPos
+import qualified Scene.GL.Attribute.VertexWithPosTex as WithPosTex
 import           Scene.Math
-import qualified Scene.Math                       as Math
+import qualified Scene.Math                          as Math
 --import           Text.Printf (printf)
 
 data App = App
-    { colorProgram :: !Program
-    , triangleMesh :: !Mesh
-    , squareMesh   :: !Mesh
-    , trianglesAt  :: ![Angle GLfloat]
+    { colorProgram     :: !Program
+    , textureProgram   :: !Program
+    , transparentImage :: !Texture
+    , triangleMesh     :: !Mesh
+    , squareMesh       :: !Mesh
+    , trianglesAt      :: ![Angle GLfloat]
     }
 
 main :: IO ()
@@ -38,7 +42,7 @@ appInit :: Viewer -> IO (Maybe App)
 appInit viewer = do
     putStrLn "appInit"
 
-    -- Load program
+    -- Load programs
     colorProgResult <- programFromFiles viewer
         ProgramRequest
             { shaders = [ (Vertex, "resources/colorVertex.glsl")
@@ -46,6 +50,17 @@ appInit viewer = do
                         ]
             , uniformNames = ["col", "mvp"]
             }
+
+    textureProgResult <- programFromFiles viewer
+        ProgramRequest
+            { shaders = [ (Vertex, "resources/textureVertex.glsl")
+                        , (Fragment, "resources/textureFragment.glsl")
+                        ]
+            , uniformNames = ["mvp", "transparentImage", "alpha"]
+            }
+
+    textureResult <- textureFromRequest viewer <|
+        defaultTextureRequest "resources/window.jpg"
 
     triMeshResult <- meshFromRequest viewer
         MeshRequest
@@ -61,10 +76,12 @@ appInit viewer = do
             , primitive = Triangles
             }
 
-    case (colorProgResult, triMeshResult, squareMeshResult) of
-        (Right colorProgram', Right triangleMesh', Right squareMesh') ->
+    case (colorProgResult, textureProgResult, textureResult, triMeshResult, squareMeshResult) of
+        ( Right colorProgram', Right textureProgram', Right transparentImage', Right triangleMesh', Right squareMesh') ->
             return $
                 Just App { colorProgram = colorProgram'
+                         , textureProgram = textureProgram'
+                         , transparentImage = transparentImage'
                          , triangleMesh = triangleMesh'
                          , squareMesh = squareMesh'
                          , trianglesAt = [ Degrees 0, Degrees 90, Degrees 180, Degrees 270 ]
@@ -86,7 +103,7 @@ appEvent viewer (Frame duration viewport) (Just app) = do
         triangles = map (renderTriangle (colorProgram app) (triangleMesh app)
                          perspectiveMatrix viewMatrix) trianglesAt'
 
-        square = renderSquare (colorProgram app) (squareMesh app)
+        square = renderSquare (textureProgram app) (transparentImage app) (squareMesh app)
                                perspectiveMatrix viewMatrix
 
     setScene viewer
@@ -112,8 +129,8 @@ appEvent viewer CloseRequest app = do
 appExit :: Viewer -> Maybe App -> IO ()
 appExit _ _ = putStrLn "appExit"
 
-renderSquare :: Program -> Mesh -> M44 GLfloat -> M44 GLfloat -> Entity
-renderSquare sqProgram sqMesh perspective view =
+renderSquare :: Program -> Texture -> Mesh -> M44 GLfloat -> M44 GLfloat -> Entity
+renderSquare sqProgram sqTexture sqMesh perspective view =
     let modelMatrix = mkScalingMatrix (V3 8 8 8)
     in Entity
          { entitySettings = [ Enable Blend
@@ -123,10 +140,11 @@ renderSquare sqProgram sqMesh perspective view =
          , entityProgram = sqProgram
          , entityMesh = sqMesh
          , entityUniforms =
-             [ UniformValue "col" squareColor
-             , UniformValue "mvp" <| mvpMatrix modelMatrix view perspective
+             [ UniformValue "mvp" <| mvpMatrix modelMatrix view perspective
+             , UniformValue "transparentImage" (3 :: GLint)
+             , UniformValue "alpha" (0.2 :: GLfloat)
              ]
-         , entityTextures = []
+         , entityTextures = [TextureBinding { texture = sqTexture, unit = 3}]
          }
 
 renderTriangle :: Program -> Mesh -> M44 GLfloat
@@ -171,12 +189,20 @@ triangleIndices = fromList [0, 1, 2]
 triangleColor :: V4 GLfloat
 triangleColor = V4 1 (69 / 255) 0 1
 
-squareVertices :: Vector WithPos.Vertex
+squareVertices :: Vector WithPosTex.Vertex
 squareVertices = fromList
-    [ WithPos.Vertex { WithPos.position = V3 (-0.5) 0.5 0 }
-    , WithPos.Vertex { WithPos.position = V3 0.5 0.5 0 }
-    , WithPos.Vertex { WithPos.position = V3 (-0.5) (-0.5) 0 }
-    , WithPos.Vertex { WithPos.position = V3 0.5 (-0.5) 0 }
+    [ WithPosTex.Vertex { WithPosTex.position = V3 (-0.5) 0.5 0
+                        , WithPosTex.texCoord = V2 0 1
+                        }
+    , WithPosTex.Vertex { WithPosTex.position = V3 0.5 0.5 0
+                        , WithPosTex.texCoord = V2 1 1
+                        }
+    , WithPosTex.Vertex { WithPosTex.position = V3 (-0.5) (-0.5) 0
+                        , WithPosTex.texCoord = V2 0 0
+                        }
+    , WithPosTex.Vertex { WithPosTex.position = V3 0.5 (-0.5) 0
+                        , WithPosTex.texCoord = V2 1 0
+                        }
     ]
 
 squareIndices :: Vector GLuint
