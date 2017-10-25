@@ -13,7 +13,7 @@ import qualified Scene.Math                       as Math
 --import           Text.Printf (printf)
 
 data App = App
-    { program      :: !Program
+    { colorProgram :: !Program
     , triangleMesh :: !Mesh
     , squareMesh   :: !Mesh
     , trianglesAt  :: ![Angle GLfloat]
@@ -39,10 +39,10 @@ appInit viewer = do
     putStrLn "appInit"
 
     -- Load program
-    progResult <- programFromFiles viewer
+    colorProgResult <- programFromFiles viewer
         ProgramRequest
-            { shaders = [ (Vertex, "resources/vertex.glsl")
-                        , (Fragment, "resources/fragment.glsl")
+            { shaders = [ (Vertex, "resources/colorVertex.glsl")
+                        , (Fragment, "resources/colorFragment.glsl")
                         ]
             , uniformNames = ["col", "mvp"]
             }
@@ -61,10 +61,10 @@ appInit viewer = do
             , primitive = Triangles
             }
 
-    case (progResult, triMeshResult, squareMeshResult) of
-        (Right program', Right triangleMesh', Right squareMesh') ->
+    case (colorProgResult, triMeshResult, squareMeshResult) of
+        (Right colorProgram', Right triangleMesh', Right squareMesh') ->
             return $
-                Just App { program = program'
+                Just App { colorProgram = colorProgram'
                          , triangleMesh = triangleMesh'
                          , squareMesh = squareMesh'
                          , trianglesAt = [ Degrees 0, Degrees 90, Degrees 180, Degrees 270 ]
@@ -83,10 +83,10 @@ appEvent viewer (Frame duration viewport) (Just app) = do
 
         trianglesAt' = map (rotateTriangle duration) <| trianglesAt app
 
-        triangles = map (renderTriangle (program app) (triangleMesh app)
+        triangles = map (renderTriangle (colorProgram app) (triangleMesh app)
                          perspectiveMatrix viewMatrix) trianglesAt'
 
-        square = renderSquare (program app) (squareMesh app)
+        square = renderSquare (colorProgram app) (squareMesh app)
                                perspectiveMatrix viewMatrix
 
     setScene viewer
