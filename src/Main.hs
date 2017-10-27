@@ -167,11 +167,7 @@ renderTriangle triProgram triMesh perspective view angle =
 
 rotateTriangle :: Double -> Angle GLfloat -> Angle GLfloat
 rotateTriangle duration angle =
-    maybe angle id <| angle `angleAdd` frameRotation duration
-
-frameRotation :: Double -> Angle GLfloat
-frameRotation duration =
-    Degrees <| realToFrac duration * 45
+    addAngles angle <| mulAngle (Degrees 45) (realToFrac duration)
 
 triangleRotationRadius :: GLfloat
 triangleRotationRadius = 10
