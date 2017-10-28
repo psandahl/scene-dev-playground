@@ -11,7 +11,6 @@ import           Scene
 import qualified Scene.GL.Attribute.VertexWithPos    as WithPos
 import qualified Scene.GL.Attribute.VertexWithPosTex as WithPosTex
 import           Scene.Math
-import qualified Scene.Math                          as Math
 --import           Text.Printf (printf)
 
 data App = App
@@ -94,7 +93,7 @@ appEvent :: Viewer -> Event -> Maybe App -> IO (Maybe App)
 -- | Catch the frame event and render stuff.
 appEvent viewer (Frame duration viewport) (Just app) = do
     let perspectiveMatrix =
-            mkPerspectiveMatrix (Degrees 45) (toAspectRatio viewport) 0.1 1000 :: M44 GLfloat
+            mkPerspectiveMatrix (Degrees 45) viewport 0.1 1000 :: M44 GLfloat
 
         viewMatrix = mkViewMatrix (V3 0 0 50) origo3d up3d
 
@@ -206,9 +205,3 @@ squareIndices = fromList [1, 0, 2, 1, 2, 3]
 
 squareColor :: V4 GLfloat
 squareColor = V4 0 0 (139 / 255) 0.5
-
-toAspectRatio :: Viewport -> AspectRatio
-toAspectRatio viewport =
-    AspectRatio { Math.width = Scene.width viewport
-                , Math.height = Scene.height viewport
-                }
